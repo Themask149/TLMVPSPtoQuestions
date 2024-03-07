@@ -5,6 +5,8 @@ import os
 import sys
 import contextlib
 import time
+from dotenv import load_dotenv
+import webhook
 os.environ['AV_LOG_LEVEL'] = 'error'
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -28,7 +30,7 @@ class QuestionDetector:
         self.mode=mode
         # Convert RGB to BGR
         self.orange_hsv = ((4,213,231),(24,233,251))
-        self.green_hsv = ((50,120,245),(80,210,255))
+        self.green_hsv = ((50,120,242),(80,210,255))
         self.rose_hsv=((140,230,223),(176,255,250))
         self.violet_hsv=((110,150,220),(131,170,255))
         self.full_path=os.path.join( r'E:\Emissions\tlmvpsp',self.video_title)
@@ -116,7 +118,7 @@ class QuestionDetector:
         self.speed=self.frame_rate//3
         print("green")
         self.look_for_color(self.green_hsv,2)
-        self.speed=self.frame_rate*5
+        self.speed=self.frame_rate*3
         self.extract_question_from_frame_manche_1()
     
     def find_all_questions_round_1_and_save(self):
@@ -127,7 +129,7 @@ class QuestionDetector:
             cv2.imwrite(filename,self.current_frame)
             i+=1
         for j in range(6):
-            self.current_frame_id+=40*self.frame_rate
+            self.current_frame_id+=50*self.frame_rate
             self.find_one_question_round_1()
             filename=os.path.join(self.full_path,f'Question-Manche1-{i:03}.jpg')
             cv2.imwrite(filename,self.current_frame)
@@ -144,8 +146,8 @@ class QuestionDetector:
     def find_one_question_round_2(self):
         if (self.mode!=NAGUI):
             print("rose")
-            self.look_for_color(self.rose_hsv,0.5)
-            self.speed=self.frame_rate
+            self.look_for_color(self.rose_hsv,1)
+            self.speed=self.frame_rate//4
             print("green")
             self.look_for_color(self.green_hsv,2)
             self.speed=self.frame_rate*5
@@ -159,7 +161,7 @@ class QuestionDetector:
             nb=12
         for i in range(nb):
             self.find_one_question_round_2()
-            self.current_frame_id+=10*self.frame_rate
+            self.current_frame_id+=8*self.frame_rate
             filename=os.path.join(self.full_path,f'Question-Manche2-{i:03}.jpg')
             cv2.imwrite(filename,self.current_frame)
         self.extract_theme()
@@ -169,7 +171,7 @@ class QuestionDetector:
     def find_one_question_round_3_champion(self):
         if (self.mode!=NAGUI):
             print("rose")
-            self.look_for_color(self.rose_hsv,1)
+            self.look_for_color(self.rose_hsv,2)
             self.speed=self.frame_rate//2
             print("green")
             self.look_for_color(self.green_hsv,2.01)
@@ -179,10 +181,10 @@ class QuestionDetector:
     def find_one_question_round_3_challenger(self):
         if (self.mode!=NAGUI):
             print("violet")
-            self.look_for_color(self.violet_hsv,0.5)
+            self.look_for_color(self.violet_hsv,1.8)
             self.speed=self.frame_rate//2
             print("green")
-            self.look_for_color(self.green_hsv,2.01)
+            self.look_for_color(self.green_hsv,1.88)
             self.speed=self.frame_rate*5
             self.extract_question_from_frame_manche_2()
     
@@ -208,15 +210,17 @@ class QuestionDetector:
         
     
     def run(self):
-        self.current_frame_id=36*60*self.frame_rate
+        self.current_frame_id=1*60*self.frame_rate
         self.find_all_questions_round_1_and_save()
-        self.current_frame_id+=1*60*self.frame_rate
+        self.current_frame_id+=2*60*self.frame_rate
         self.find_all_questions_round_2_and_save()
-        self.current_frame_id+=5*60*self.frame_rate
+        self.current_frame_id+=15*30*self.frame_rate
         self.find_all_questions_round_3_and_save()
         fullname=os.path.join(self.full_path,"questions.txt")
         with open(fullname, 'w') as file:
             for string in self.questions:
+                if string=="":
+                    string="Question non trouvée"
                 file.write(string + '\n')
         fullname=os.path.join(self.full_path,"themes.txt")
         with open(fullname, 'w') as file:
@@ -248,6 +252,9 @@ if __name__=="__main__":
             mode=JARRY
         question_detector = QuestionDetector(video_path,mode)
         question_detector.run()
+        load_dotenv()
+        url = os.getenv("WEBHOOK_URL_2")
+        webhook.send_emission(url,question_detector.full_path)
        
     else:
         print("Usage: python showtoquestions.py <video_path> <mode>")

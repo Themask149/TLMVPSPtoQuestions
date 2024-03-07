@@ -11,7 +11,7 @@ def send_emission(url, directory_path):
     wh = SyncWebhook.from_url(url)
     questions=[]
     themes=[]
-    wh.send(content="Ah oui !!!!! Le Jarry du jour ! ")
+    wh.send(content="C'est parti pour le Jarry d'aujourd'hui'")
     with open(os.path.join(directory_path,"questions.txt"), 'r') as file:
         for line in file:
             questions.append(line.strip())
@@ -43,5 +43,5 @@ if __name__ == "__main__":
         sys.exit(1)
     directory_path = sys.argv[1]
     load_dotenv()
-    url = os.getenv("WEBHOOK_URL")
+    url = os.getenv("WEBHOOK_URL_2")
     send_emission(url,directory_path)
