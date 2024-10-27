@@ -1,2 +1,4 @@
 .env
 test_tesseract.py
+output.txt
+__pycache__/

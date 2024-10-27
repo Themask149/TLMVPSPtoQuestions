@@ -5,13 +5,15 @@ import os
 from dotenv import load_dotenv
 import sys
 
-
+CYRIL_bp=(15,27,33)
+CYRIL=4
+mode=CYRIL
 
 def send_emission(url, directory_path):
     wh = SyncWebhook.from_url(url)
     questions=[]
     themes=[]
-    wh.send(content="C'est parti pour le Jarry d'aujourd'hui'")
+    wh.send(content="C'est parti pour le Cyril de ce midi ! Voici les questions :")
     with open(os.path.join(directory_path,"questions.txt"), 'r') as file:
         for line in file:
             questions.append(line.strip())
@@ -19,17 +21,18 @@ def send_emission(url, directory_path):
     with open(os.path.join(directory_path,"themes.txt"), 'r') as file:
         for line in file:
             themes.append(line.strip())
-
+    if mode==CYRIL:
+        bp1,bp2,bp3=CYRIL_bp
     for i,filename in enumerate(sorted(os.listdir(directory_path))):
         file_path = os.path.join(directory_path,filename)
         if filename=="questions.txt" or filename=="themes.txt":
             break
         if os.path.isfile(file_path):
-            if i==14:
+            if i==bp1:
                 wh.send(content=f"Le Thème de la manche 2 est : {themes[0]}")
-            elif i==24:
+            elif i==bp2:
                 wh.send(content=f"Le Thème du champion est : {themes[1]}")
-            elif i==29:
+            elif i==bp3:
                 wh.send(content=f"Le Thème du challenger est : {themes[2]}")
             wh.send(content=questions[i])
             file = discord.File(file_path, filename="SPOILER_"+filename)
